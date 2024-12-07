@@ -46,7 +46,104 @@ public:
             cout<<endl;
         }
     }
+
+int min(int dist[],bool v[],int T)
+{
+int min=1e9;
+int index=-1;
+    for(int k=0; k<T; k++) 
+    {
+        if(v[k]==false && dist[k]<=min) 
+        {
+            min=dist[k];
+            index=k;
+        }
+    }
+return index;
+}
+
+void ShortestPath(char start,char end) 
+{
+int s=start-'A'; 
+int e=end-'A';
+int*dist=new int[numOfVertex]; 
+char*p=new char[numOfVertex]; 
+bool*v=new bool[numOfVertex]; 
+for(int i=0;i<numOfVertex;i++)
+    {
+        dist[i]=1e9;
+        p[i]='\0';
+        v[i]=false;
+    }
+dist[s]=0;           
+for(int c=0;c<numOfVertex;c++) 
+    {
+        int u=min(dist,v,numOfVertex);
+        v[u]=true; 
+        if(u==e)//if end vertex is found then break
+        break;
+       
+        road*temp=roadKiList[u]; 
+    while(temp!=NULL)
+     { 
+     //Comparing the neighbours of source vertex to get the shortest distance. so in each iteration the node will move on to the next neighbour
+    int l=temp->dest-'A'; 
+    int weight=temp->dist;  
+    if(v[l]==false) 
+    { 
+        if(dist[u]!=1e9)
+         { 
+            if(dist[u]+weight<dist[l])
+             { 
+                dist[l]=dist[u]+weight;  
+                p[l]='A'+u;            
+             }
+        }
+    }
+
+    temp=temp->next;
+    }
+
+    }
+if(dist[e]==1e9)
+{
+  cout<<"No path was found."<<endl;
+}
+else 
+{
+cout<<"Shortest distance:"<<dist[e]<<endl;
+char a=end;
+int i=-1;
+a=end;
+i=-1;
+char s1=start;
+int s2;
+char s3=end;
+cout<<start;
+while(a!=p[end-'A']) 
+{       
+        s3=end;
+        cout<<"->";
+        while(p[i]!=s1)
+        {
+            s2=i;
+            i=s3-'A';
+            s3=p[i];
+        }
+        a=p[s2];
+        cout<<a; 
+        s1=a;
+}
+cout<<"->";
+cout<<end<<endl;
+
+delete[] dist;
+    delete[] p;
+    delete[] v;
+     }
+ }
 };
+
 void read_and_Build(roadNetworks &roads){
     ifstream file("road_network.csv");
     string line;
@@ -75,86 +172,17 @@ void read_and_Build(roadNetworks &roads){
     file.close();
 }
 
-struct track{
-    string road;     
-    int vehicleCount; 
-    track *next;  
-    track(){road="",vehicleCount=0,next=nullptr;}
-    track(string r, int c):road(r),vehicleCount(c),next(nullptr) {}
-};
-class CongestionMonitoring{
-private:
-    track* table[27];
-    int hashFunction(char src, char dest) {
-        int hash = src + dest;
-        return hash%27;
-}
-public:
-    CongestionMonitoring(){
-        for (int i=0;i<27; i++) {
-            table[i]=nullptr;
-        }
-    }
-    void add(char src,char dest) {
-       string roadKey = string(1, src) + " to " + string(1, dest);//concating starting vertex and ending vertex i.e A + B = AB
-        int index=hashFunction(src,dest);
-
-        track* temp=table[index];
-        while(temp){
-            if(temp->road == roadKey){
-                temp->vehicleCount++;
-                return;
-            }
-            temp=temp->next;
-        }
-        //IF NOT FOUND
-        track* nawaTrack=new track(roadKey, 1);
-        nawaTrack->next=table[index];
-        table[index]=nawaTrack;
-    }
-    void display(){
-        for(int i=0;i<27;i++) {
-            track* temp=table[i];
-            while(temp){
-                cout<<temp->road<<" | Vehicles: "<<temp->vehicleCount<<endl;
-                temp=temp->next;
-            }
-        }
-    }
-};
-void read_And_addVehicle(CongestionMonitoring &rastyyy){
-    ifstream file("FILE NAME HERE.csv");
-    string line;
-    
-    if (!file.is_open()){
-        cout<<"Error in opening file..."<<endl;
-        return;
-    }
-
-    getline(file, line);
-
-    while (getline(file, line)){
-        stringstream ss(line);
-        char src, dest;
-        int dist;
-
-        ss>>src; 
-        ss.ignore();  
-        ss>>dest;    
-
-        rastyyy.add(src, dest); 
-    }
-
-    file.close();
-}
-
 int main() {
-    // int totalVertexs = 26; 
-    // roadNetworks city(totalVertexs);  
-    // read_and_Build(city);  
-    // city.displayRoad(); 
-    CongestionMonitoring roads;
-    read_And_addVehicle(roads);
-    roads.display();
-    }
-
+    int totalVertexs = 26; 
+    roadNetworks city(totalVertexs);  
+    read_and_Build(city);  
+    city.displayRoad(); 
+    char start;
+    char end;
+    cout<<"Enter points: "<<endl;
+    cout<<"Start: ";
+    cin>>start;
+    cout<<"  End: ";
+    cin>>end;
+    city.ShortestPath(start, end);
+}
