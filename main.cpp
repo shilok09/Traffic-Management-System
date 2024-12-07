@@ -171,12 +171,56 @@ void read_and_Build(roadNetworks &roads){
 
     file.close();
 }
-
-int main() {
-    int totalVertexs = 26; 
-    roadNetworks city(totalVertexs);  
-    read_and_Build(city);  
-    city.displayRoad(); 
+int main(){
+  bool exit= false;
+  RoadClosure closure;
+  closure.loadData();
+  TrafficSignalManagement traffic;
+  traffic.loadData();
+  int totalVertexs = 26; 
+  roadNetworks city(totalVertexs);  
+  read_and_Build(city);  
+  while(!exit){
+    int choice;
+        cout<<"-----Simulation Dashboard-----"<<endl;
+        cout<<"1. Display City Traffic Network"<<endl;
+        cout<<"2. Display Traffic Signal Status"<<endl;
+        cout<<"3. Display Congestion Status"<<endl;
+        cout<<"4. Display Blocked Roads"<<endl;
+        cout<<"5. Handle Emergency Vehicle Routing"<<endl;
+        cout<<"6. Block Road due to Accident"<<endl;
+        cout<<"7. Simulate Vehicle Routing"<<endl;
+        cout<<"8. Exit Simulation"<<endl;
+        cout<<"Enter your choice: ";
+        cin>>choice;
+        switch(choice){
+            case 1:
+               city.displayRoad(); 
+               break;
+            case 2: 
+               traffic.display();
+               break;
+            case 3:
+               
+               break;
+            case 4:
+               closure.display();
+               break;
+            case 5:
+               break;
+            case 6:
+               closure.blockRoad();
+               break;
+            case 7:
+               break;
+            case 8:
+               exit= true;
+               break;
+            default:
+               cout<<"Invalid Choice!"<<endl;
+               break;
+        }
+        }
     char start;
     char end;
     cout<<"Enter points: "<<endl;
@@ -185,4 +229,6 @@ int main() {
     cout<<"  End: ";
     cin>>end;
     city.ShortestPath(start, end);
+
+  return 0;
 }
