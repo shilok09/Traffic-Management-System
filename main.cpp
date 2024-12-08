@@ -72,7 +72,8 @@ public:
             table[i]=nullptr;
         }
     }
-    void add(char src,char dest) {
+    void add(char src,char dest)
+     {
        string roadKey = string(1, src) + " to " + string(1, dest);//concating starting vertex and ending vertex i.e A + B = AB
         int index=hashFunction(src,dest);
 
@@ -196,7 +197,7 @@ class RoadClosure{
                  char end=toupper(road[1]);
                  statuses.addStatus(start, end, "Blocked");
                  display();
-                 //vehicle routing system
+                 
               }
             }
          void display(){
@@ -205,6 +206,61 @@ class RoadClosure{
 
 };
 
+struct QueueNode 
+{
+    int weight;
+    int node;
+    string path;
+    QueueNode* next;
+};
+
+class PathQueue 
+{
+private:
+    QueueNode*front;
+    QueueNode*rear;
+
+public:
+    PathQueue():front(NULL),rear(NULL) {}
+     void push(int node, const string& path, int weight)
+      {
+        QueueNode* newNode = new QueueNode{node, weight, path, nullptr};
+        if (rear==NULL) 
+        {
+            front=newNode;
+            rear=newNode;
+        } 
+        else
+        {
+            rear->next = newNode;
+            rear = newNode;
+        }
+    }
+
+    bool pop(int& node, string& path, int& weight)
+     {
+        if (front == nullptr) 
+        {
+            return false;
+        }
+        QueueNode* temp = front;
+        node=front->node;
+        path=front->path;
+        weight=front->weight;
+        front=front->next;
+        if (front==nullptr)
+         {
+            rear = nullptr;
+        }
+        delete temp;
+        return true;
+    }
+
+    bool empty(){
+        return front == nullptr;
+    }
+    
+};
 class roadNetworks{
 private:
     int numOfVertex;
@@ -216,7 +272,9 @@ public:
   RoadStatusList status;
     roadNetworks(){numOfVertex=0;roadKiList=nullptr;}  
     roadNetworks(int n)
-    {    T_vehicle=30;
+    {   
+         
+         T_vehicle=30;
         v=new vehicle[100];
         numOfVertex=n;
         roadKiList=new road*[n];  //initialising list for storing graph in adjacency list manner
@@ -235,33 +293,6 @@ public:
             roadKiList[destIndex]=new road(src, dist, roadKiList[destIndex]);
         }
     }
-    void removeRoad(char src,char dest){
-        int srcIndex=src-'A';
-        int destIndex=dest-'A';
-
-        // Remove road from src to dest
-        roadKiList[srcIndex]=removeRoadFromList(roadKiList[srcIndex],dest);
-
-        // Remove road from dest to src (if two-way)
-        roadKiList[destIndex]=removeRoadFromList(roadKiList[destIndex],src);
-    }
-
-    road* removeRoadFromList(road* head, char dest) {
-        road* temp = head;
-        road* prev = nullptr;
-
-        while (temp &&temp->dest != dest) {
-            prev = temp;
-            temp = temp->next;
-        }
-
-        if (!temp) return head; // Road not found
-        if (!prev){ head=temp->next;}// Removing the head
-        else{prev->next=temp->next;} // Skipping the current node
-        delete temp;
-        return head;
-    }
-
     void displayRoad(){
         for(int i=0;i<numOfVertex;i++) {
             cout<<char('A'+i)<<": ";
@@ -273,179 +304,218 @@ public:
             cout<<endl;
         }
     }
-
-int min(int dist[],bool v[],int T)
-{
-int min=1e9;
-int index=-1;
-    for(int k=0; k<T; k++) 
+ void dfs(int cNode,int eNode, string currentPath,bool*v,int W) 
+ {
+    if (cNode==eNode)
     {
-        if(v[k]==false && dist[k]<=min) 
-        {
-            min=dist[k];
-            index=k;
-        }
-    }
-return index;
-}
-
-string ShortestPath(char start, char end) {
-    int s = start - 'A';
-    int e = end - 'A';
-    int* dist = new int[numOfVertex];
-    char* p = new char[numOfVertex];
-    bool* v = new bool[numOfVertex];
-    for (int i = 0; i < numOfVertex; i++) {
-        dist[i] = 1e9;
-        p[i] = '\0';
-        v[i] = false;
-    }
-    dist[s] = 0;
-
-    for (int c = 0; c < numOfVertex; c++) {
-        int u = min(dist, v, numOfVertex);
-        v[u] = true;
-        if (u == e) break;
-
-        road* temp = roadKiList[u];
-        while (temp != NULL) {
-            char a = 'A' + u;  // Source node
-            char b = temp->dest; // Destination node
-            // Check if road is blocked or under repair before considering it
-            if(!isBlocked(a, b)) {
-                int l=temp->dest - 'A';
-                int weight = temp->dist;
-               if(v[l]==false) 
-              { 
-                      if(dist[u]!=1e9)
-                     { 
-                                 if(dist[u]+weight<dist[l])
-                                 { 
-                                    dist[l]=dist[u]+weight;  
-                                    p[l]='A'+u;            
-                                  }
-                     }
-             }
-        }
-
-            temp = temp->next;
-        }
-    }
-
-    if (dist[e] == 1e9) {
-        cout << "No path was found." << endl;
-        return "";
-    } else {
-        cout << "Shortest distance: " << dist[e] << endl;
-        char a = end;
-        int i;
-        string V;
-        while (a != '\0') {
-            V += a;
-            i = a - 'A';
-            a = p[i];
-        }
-
-        string temp;
-        int j = 0;
-        int size = 0;
-        while (V[size] != '\0') {
-            size++;
-        }
-        while (size > 0) {
-            temp += V[size - 1];
-            j++;
-            size--;
-        }
-        V = temp;
-
-        delete[] dist;
-        delete[] p;
-        delete[] v;
-        return V;
-    }
-}
-
-void read_vehicle() {
-    ifstream file("vehicles.csv");
-    string line;
-
-    if (!file.is_open()) {
-        cout << "Error in opening file..." << endl;
+        cout<<"Path: "<<currentPath<<" | Total Weight: "<<W<<endl;
         return;
     }
-
-    getline(file, line); 
-    int index = 0;
-    while (getline(file, line)) 
-    {
-        stringstream ss(line);
-        string vehicle_ID;
-        string src;
-        string dest;
-
-        getline(ss, vehicle_ID, ',');  
-        getline(ss, src, ',');        
-        getline(ss, dest, ',');        
-
-        char start = src[0];
-        char end = dest[0];
-        string path=ShortestPath(start, end);
-         
-            v[index]=vehicle(vehicle_ID, path);
-           // cout<<"Vehicle " <<vehicle_ID << ": Path = " <<path<<endl;
-            index++;
-        
-    }
-
-    file.close();
-}
-void changeCurrent(int i)
-{
-    v[i].change_Current();
-}
-void read_And_addVehicle(CongestionMonitoring &rastyyy)
- {
-    for (int i = 0; i < 31; i++)
-     {  
-        string vehiclePath = v[i].path;
-        int pathlength;
-        int pathLength = vehiclePath.length();
-        for(int j=0; j<pathLength-1;j++)
-         {  
-            char src=vehiclePath[j];
-            char dest=vehiclePath[j + 1];
-            rastyyy.add(src, dest);  
-        }
-    }
-}
-bool isBlocked(char start, char end) 
-{           
-    Status* temp = status.head;
-    while (temp != NULL) {
-        //cout<<temp->start<<temp->end<<temp->status;
-        if (temp->start == start && temp->end == end && (temp->status=="Blocked" || temp->status=="Under Repair")) {
-            cout<<start<<end<<endl;
-            return true;
+    v[cNode]=true;
+    road* temp=roadKiList[cNode];
+    while(temp!=nullptr)
+     {
+        int nextNode=temp->dest-'A';
+        if(!v[nextNode]) 
+        {
+            dfs(nextNode, eNode,currentPath+temp->dest,v,W+temp->dist);
         }
         temp = temp->next;
-        
     }
-    return false;
+    v[cNode]=false;  
+}
+
+void findAllPaths()
+ {
+    char start;
+    char end;
+    cout<<"Enter Starting intersection"<<endl;
+    cin>>start;
+    cout<<"Enter Ending Intersection: "<<endl;
+    cin>>end;
+    cout<<"Simulating vehicle routing..."<<endl;
+    cout<<"All possible paths from "<<start<<" to "<<end<<" are:";
+    int s=start-'A';
+    int e=end-'A';
+    bool*visited=new bool[numOfVertex];  
+    for (int i=0; i<numOfVertex; i++)
+    {
+        visited[i] = false;
+    }
+    string l="";
+    l+=start;
+    dfs(s, e,l, visited, 0);
+    delete[] visited;
 }
 
 
-void handleEmergencyVehicle()
-   {    char start;
-        char end;
-        cout<<"Enter start and end intersection for emergency vehicle:"<<endl;
-        cin>>start>>end;
-        string path=ShortestPath(start, end);
-        cout<<"Emergency Vehicle is being routed....:"<<endl;
-        if (!path.empty()) {
-            cout << "Emergency Vehicle Path: " << path << endl;
-        }
-    }
+	int min(int dist[],bool v[],int T)
+	{
+	int min=1e9;
+	int index=-1;
+	    for(int k=0; k<T; k++) 
+	    {
+		if(v[k]==false && dist[k]<=min) 
+		{
+		    min=dist[k];
+		    index=k;
+		}
+	    }
+	return index;
+	}
+
+	string ShortestPath(char start, char end) {
+	    int s = start - 'A';
+	    int e = end - 'A';
+	    int* dist = new int[numOfVertex];
+	    char* p = new char[numOfVertex];
+	    bool* v = new bool[numOfVertex];
+	    for (int i = 0; i < numOfVertex; i++) {
+		dist[i] = 1e9;
+		p[i] = '\0';
+		v[i] = false;
+	    }
+	    dist[s] = 0;
+
+	    for (int c = 0; c < numOfVertex; c++) {
+		int u = min(dist, v, numOfVertex);
+		v[u] = true;
+		if (u == e) break;
+
+		road* temp = roadKiList[u];
+		while (temp != NULL) {
+		    char a = 'A'+u;  // Source node
+		    char b = temp->dest; 
+		    // Check if road is blocked or under repair before considering it
+		    if(!isBlocked(a, b)) {
+		        int l=temp->dest - 'A';
+		        int weight = temp->dist;
+		       if(v[l]==false) 
+		      { 
+		              if(dist[u]!=1e9)
+		             { 
+		                         if(dist[u]+weight<dist[l])
+		                         { 
+		                            dist[l]=dist[u]+weight;  
+		                            p[l]='A'+u;            
+		                          }
+		             }
+		     }
+		}
+
+		    temp = temp->next;
+		}
+	    }
+
+	    if (dist[e] == 1e9) {
+		cout << "No path was found." << endl;
+		return "";
+	    } else {
+		//cout << "Shortest distance: " << dist[e] << endl;
+		char a = end;
+		int i;
+		string V;
+		while (a != '\0') {
+		    V += a;
+		    i = a - 'A';
+		    a = p[i];
+		}
+
+		string temp;
+		int j = 0;
+		int size = 0;
+		while (V[size] != '\0') {
+		    size++;
+		}
+		while (size > 0) {
+		    temp += V[size - 1];
+		    j++;
+		    size--;
+		}
+		V = temp;
+
+		delete[] dist;
+		delete[] p;
+		delete[] v;
+		return V;
+	    }
+	}
+
+	bool isBlocked(char start, char end) {
+		Status* temp=status.head;
+		while (temp) {
+		    if (temp->start == start && temp->end == end && (temp->status == "Blocked" || temp->status == "Under Repair")) {
+		        return true;
+		    }
+		    temp = temp->next;
+		}
+		return false;
+	    }
+
+	void read_vehicle() {
+	    ifstream file("vehicles.csv");
+	    string line;
+
+	    if (!file.is_open()) {
+		cout << "Error in opening file..." << endl;
+		return;
+	    }
+
+	    getline(file, line); 
+	    int index = 0;
+	    while (getline(file, line)) 
+	    {
+		stringstream ss(line);
+		string vehicle_ID;
+		string src;
+		string dest;
+
+		getline(ss, vehicle_ID, ',');  
+		getline(ss, src, ',');        
+		getline(ss, dest, ',');        
+
+		char start = src[0];
+		char end = dest[0];
+		string path=ShortestPath(start, end);
+		 
+		    v[index]=vehicle(vehicle_ID, path);
+		   // cout<<"Vehicle " <<vehicle_ID << ": Path = " <<path<<endl;
+		    index++;
+		
+	    }
+
+	    file.close();
+	}
+	void changeCurrent(int i)
+	{
+	    v[i].change_Current();
+	}
+	void read_And_addVehicle(CongestionMonitoring &rastyyy)
+	 {
+	    for (int i = 0; i < 31; i++)
+	     {  
+		string vehiclePath = v[i].path;
+		int pathlength;
+		int pathLength = vehiclePath.length();
+		for(int j=0; j<pathLength-1;j++)
+		 {  
+		    char src=vehiclePath[j];
+		    char dest=vehiclePath[j + 1];
+		    rastyyy.add(src, dest);  
+		}
+	    }
+	}
+	void handleEmergencyVehicle()
+	   {    char start;
+		char end;
+		cout<<"Enter start and end intersection for emergency vehicle:"<<endl;
+		cin>>start>>end;
+		string path=ShortestPath(start, end);
+		cout<<"Emergency Vehicle is being routed....:"<<endl;
+		if (!path.empty()) {
+		    cout << "Emergency Vehicle Path: " << path << endl;
+		}
+	    }
 
     void readEmergencyVehicles() 
     {
@@ -526,13 +596,15 @@ class Signal{
      int greenTime;
      int vehicleDensity;
      bool emergencyVehicle;
+     bool highPriority;
      Signal* next;
      
-     Signal(char i='*', int g='*', int v=0, bool e=false){
+     Signal(char i='*', int g='*', int v=0, bool e=false, bool h=false){
         intersection=i;
         greenTime= g;
         vehicleDensity=v;
         emergencyVehicle= e;
+        highPriority= h;
         next=NULL;
      }
     
@@ -544,25 +616,27 @@ class PriorityQueue{
      int size;
      Signal* queue;
      
-     PriorityQueue(){
+PriorityQueue()
+{
          size= 0;
          capacity= 26;
          queue= new Signal[capacity];
-     }
+ }
      
-     ~PriorityQueue(){
+     ~PriorityQueue()
+     {
          delete[] queue;
      }
      
-      void swap(Signal& signal1 , Signal& signal2){
+      void swap(Signal& signal1 , Signal& signal2)
+      {
              Signal temp=signal1;
              signal1=signal2;
              signal2= temp;
-             
-	     
       }
       
-      void heapify(int index){
+      void heapify(int index)
+      {
             int max=index;
             int right= (2*index)+2;
             int left=(2*index)+1;
@@ -586,7 +660,8 @@ class PriorityQueue{
             }
             
       }
-      void add(Signal signal){
+      void add(Signal signal)
+      {
          if(size<capacity){
             queue[size]=signal;
             int curr= size;
@@ -605,7 +680,8 @@ class PriorityQueue{
             }
          }
       }
-      Signal del_getMax(){
+      Signal del_getMax()
+      {
           if(size>0){
              Signal max=queue[0];
              queue[0]= queue[size-1];
@@ -624,7 +700,8 @@ class SignalList{
           head=NULL;
        }
        
-       void addSignal(char i,int g){
+       void addSignal(char i,int g)
+       {
           Signal* newsignal= new Signal(i,g);
            if(head==NULL){
               head=newsignal;
@@ -647,7 +724,6 @@ class SignalList{
          
          }
 };
-
 class TrafficSignalManagement{
      public:
         SignalList signals;
@@ -687,7 +763,25 @@ class TrafficSignalManagement{
          void addVehicleDensity(){
               
          }
-         void addEmergencyVehicle(){}
+         void addEmergencyVehicle(vehicle* vehicles, int size){
+                Signal* temp=signals.head;
+                while(temp!=NULL){
+                  for(int i=0; i<size; i++){
+                   if(vehicles[i].V[0]=='E'){
+                    string path=vehicles[i].path;
+                    for(int j=0; j<path.length(); j++){
+                        if(path[j]==temp->intersection){
+                           temp->emergencyVehicle= true;
+                           if(vehicles[i].priority=="High")
+                            {temp->highPriority=true;}
+                            break;
+                        }
+                    }
+                    }
+                   }
+                   temp= temp->next;
+                }
+         }
          void addToHeap(){
              Signal* temp= signals.head;
              while(temp!=NULL){
@@ -701,18 +795,18 @@ class TrafficSignalManagement{
              signals.display();
          }
 };
-
-
 int main() {
-  bool exit= false;
+  int totalVertexs = 26; 
+  bool exit=false;
   RoadClosure closure;
+  roadNetworks city(totalVertexs);  
+  read_and_Build(city); 
   CongestionMonitoring roads;
+  city.read_vehicle();
+  city.read_And_addVehicle(roads);
   closure.loadData();
- // TrafficSignalManagement traffic;
- // traffic.loadData();
-    int totalVertexs = 26; 
-    roadNetworks city(totalVertexs);  
-    read_and_Build(city); 
+  TrafficSignalManagement traffic;
+  traffic.loadData();
   while(!exit)
   {
     int choice;
@@ -724,8 +818,7 @@ int main() {
         cout<<"5. Handle Emergency Vehicle Routing"<<endl;
         cout<<"6. Block Road due to Accident"<<endl;
         cout<<"7. Simulate Vehicle Routing"<<endl;
-        cout<<"8. Remove Road from Road Network"<<endl;
-        cout<<"9. Exit Simulation"<<endl;
+        cout<<"8. Exit Simulation"<<endl;
         cout<<"Enter your choice: ";
         cin>>choice;
         switch(choice){
@@ -734,12 +827,10 @@ int main() {
                break;
     case 2: 
            
-              // traffic.display();
+               traffic.display();
                break;
     case 3:
             cout<<"Assigning shortest path to vehicles:"<<endl;
-            city.read_vehicle();
-            city.read_And_addVehicle(roads);
             roads.display();
             break;
     case 4:
@@ -761,24 +852,13 @@ int main() {
                break;
     case 6:
               closure.blockRoad();
+              city.status=closure.statuses;
               city.handleEmergencyVehicle();
                break;
     case 7:
+             city.findAllPaths();
                break;
-    case 8: {   // Remove Road from Network
-                cout << "\nEnter the source intersection (A-Z): ";
-                char src;
-                cin >> src;
-
-                cout << "Enter the destination intersection (A-Z): ";
-                char dest;
-                cin >> dest;
-
-                city.removeRoad(src, dest);
-                cout << "Road between " << src << " and " << dest << " removed successfully.\n";
-                break;
-            }
-    case 9:
+    case 8:
                exit= true;
                break;
     default:
