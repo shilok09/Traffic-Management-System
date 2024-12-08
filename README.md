@@ -1,6 +1,7 @@
 # Traffic Management System
 **Data Structures Final Project**
-This project implements a comprehensive traffic management and congestion monitoring system. It combines features like vehicle routing, congestion monitoring, road closures, and emergency vehicle management to optimize road network operations.
+
+- This project implements a comprehensive traffic management and congestion monitoring system. It combines features like vehicle routing, congestion monitoring, road closures, and emergency vehicle management to optimize road network operations.
 
 ## Features
 
