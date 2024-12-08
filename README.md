@@ -1,109 +1,128 @@
-# Traffic-Management-System# Traffic Management System Simulator
+# Traffic Management and Congestion Monitoring System
 
-## Overview
-This project implements a **Traffic Management System Simulator** in C++, using data structures like adjacency lists and hash tables. The system tracks road networks, monitors congestion levels, and assigns vehicles to optimal routes based on the shortest paths calculated using Dijkstra's algorithm. The project also integrates vehicle data read from a CSV file and supports dynamic congestion updates.
-
----
+This project implements a comprehensive traffic management and congestion monitoring system. It combines features like vehicle routing, congestion monitoring, road closures, and emergency vehicle management to optimize road network operations.
 
 ## Features
-- **Road Network Representation**: Uses adjacency lists to represent roads and distances.
-- **Shortest Path Calculation**: Implements Dijkstra's algorithm for finding the shortest path between source and destination.
-- **Vehicle Management**: Reads vehicle data (IDs, start points, destinations) from a CSV file and assigns optimal routes.
-- **Congestion Monitoring**: Tracks the number of vehicles on each road segment and displays congestion levels.
 
----
+1. **Road Network Management**
+   - Represented as an adjacency list.
+   - Dynamic addition of roads and their distances.
 
-## Code Structure
+2. **Vehicle Routing**
+   - Calculates the shortest path for vehicles using Dijkstra's algorithm.
+   - Supports routing for emergency vehicles with priority.
 
-### Key Components
-1. **`road` Struct**:
-   - Represents a road with destination, distance, and a pointer to the next road.
-   
-2. **`vehicle` Class**:
-   - Manages vehicle IDs, paths, current locations, and dynamic updates of their positions.
+3. **Congestion Monitoring**
+   - Tracks vehicle counts on roads using a hash table.
+   - Displays congestion details for the road network.
 
-3. **`track` Struct**:
-   - Stores road information and the number of vehicles on each road.
+4. **Road Closure Management**
+   - Tracks road statuses (e.g., blocked, under repair).
+   - Dynamically updates road statuses based on real-time data.
 
-4. **`CongestionMonitoring` Class**:
-   - Implements a hash table to track vehicle counts on roads using a custom hash function.
+5. **Emergency Vehicle Management**
+   - Assigns high-priority paths for emergency vehicles.
+   - Adjusts signals and routing to accommodate emergency situations.
 
-5. **`roadNetworks` Class**:
-   - Manages the road network as an adjacency list.
-   - Provides methods for adding roads, finding shortest paths, and integrating vehicle data.
+6. **Signal Management**
+   - Prioritizes intersections using a max-heap.
+   - Dynamically adjusts signal timings based on vehicle density and emergency vehicle presence.
 
----
+## Files Used
 
-## Installation and Usage
+### Input Files
+- **`road_network.csv`**: Defines the road network with distances.
+  - Columns: `Source`, `Destination`, `Distance`
+- **`vehicles.csv`**: Lists vehicles and their paths.
+  - Columns: `Vehicle ID`, `Start`, `End`
+- **`emergency_vehicles.csv`**: Lists emergency vehicles and their details.
+  - Columns: `Vehicle ID`, `Start`, `End`, `Priority`
+- **`road_closures.csv`**: Tracks road closures or maintenance statuses.
+  - Columns: `Source`, `Destination`, `Status`
+
+## Key Classes and Structures
+
+1. **`road`**: Represents a road segment in the network.
+2. **`vehicle`**: Manages individual vehicle data and routing.
+3. **`track`**: Tracks road usage for congestion monitoring.
+4. **`CongestionMonitoring`**: Implements a hash table to monitor congestion.
+5. **`Status` and `RoadStatusList`**: Handle road statuses like blocked or under repair.
+6. **`roadNetworks`**: Manages the overall road network and vehicle routing.
+7. **`Signal` and `PriorityQueue`**: Implement signal management using a max-heap.
+
+## How It Works
+
+1. **Initialization**:
+   - Load road network and vehicle data from CSV files.
+   - Construct the adjacency list and hash table for roads and vehicles.
+
+2. **Shortest Path Calculation**:
+   - Uses Dijkstra's algorithm to determine the shortest path while avoiding blocked roads.
+
+3. **Dynamic Updates**:
+   - Road closures and new vehicles are dynamically added and handled in real-time.
+
+4. **Emergency Handling**:
+   - Emergency vehicles are routed with the highest priority.
+   - Signals are adjusted to facilitate smooth movement of emergency vehicles.
+
+5. **Congestion Monitoring**:
+   - Tracks the density of vehicles on roads and displays congestion reports.
+
+6. **Signal Management**:
+   - Adjusts signal timings dynamically based on vehicle density and emergency presence.
+
+## Compilation and Execution
 
 ### Prerequisites
-- C++ Compiler (e.g., GCC or MSVC)
-- CSV files:
-  - `road_network.csv`: Contains road data in the format `source,destination,distance`.
-  - `vehicles.csv`: Contains vehicle data in the format `vehicleID,source,destination`.
+- C++ compiler (e.g., g++)
+- Input CSV files (`road_network.csv`, `vehicles.csv`, `emergency_vehicles.csv`, `road_closures.csv`)
 
 ### Compilation
-Compile the program using a C++ compiler:
 ```bash
-g++ -o traffic_simulator traffic_simulator.cpp
+ g++ -o traffic_management traffic_management.cpp
 ```
 
 ### Execution
-Run the compiled program:
 ```bash
-./traffic_simulator
+ ./traffic_management
 ```
 
-### Example CSV Files
-#### `road_network.csv`:
+### Sample Input
+#### `road_network.csv`
 ```
-source,destination,distance
-A,B,5
-B,C,3
-C,D,7
-```
-
-#### `vehicles.csv`:
-```
-vehicleID,source,destination
-V001,A,D
-V002,B,C
+Source,Destination,Distance
+A,B,10
+B,C,15
+C,D,20
 ```
 
----
-
-## Features Demonstration
-
-1. **Build Road Network**:
-   - Reads from `road_network.csv` to create an adjacency list.
-   
-2. **Display Roads**:
-   - Outputs all roads and distances.
-
-3. **Shortest Path Assignment**:
-   - Computes the shortest path for each vehicle and assigns it.
-
-4. **Congestion Monitoring**:
-   - Displays the vehicle count on each road segment.
-
----
-
-## Sample Output
+#### `vehicles.csv`
 ```
-Vehicle V001: Path = A -> B -> C -> D
-Vehicle V002: Path = B -> C
-Congestion Levels:
-A to B | Vehicles: 1
-B to C | Vehicles: 2
-C to D | Vehicles: 1
+Vehicle ID,Start,End
+V1,A,C
+V2,B,D
 ```
 
----
+#### `emergency_vehicles.csv`
+```
+Vehicle ID,Start,End,Priority
+E1,A,D,High
+```
+
+#### `road_closures.csv`
+```
+Source,Destination,Status
+B,C,Blocked
+```
+
+### Output
+- Displays the road network, vehicle routes, congestion status, and dynamic signal management.
 
 ## Future Enhancements
-- Add real-time updates for vehicle movements.
-- Integrate traffic signal prioritization.
-- Visualize road networks and congestion levels.
+- Integration with real-time traffic data APIs.
+- GUI for visualizing the road network and vehicle routes.
+- Support for additional road and vehicle attributes (e.g., speed limits, vehicle types).
 
 
 
