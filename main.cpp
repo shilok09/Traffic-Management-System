@@ -235,6 +235,33 @@ public:
             roadKiList[destIndex]=new road(src, dist, roadKiList[destIndex]);
         }
     }
+    void removeRoad(char src,char dest){
+        int srcIndex=src-'A';
+        int destIndex=dest-'A';
+
+        // Remove road from src to dest
+        roadKiList[srcIndex]=removeRoadFromList(roadKiList[srcIndex],dest);
+
+        // Remove road from dest to src (if two-way)
+        roadKiList[destIndex]=removeRoadFromList(roadKiList[destIndex],src);
+    }
+
+    road* removeRoadFromList(road* head, char dest) {
+        road* temp = head;
+        road* prev = nullptr;
+
+        while (temp &&temp->dest != dest) {
+            prev = temp;
+            temp = temp->next;
+        }
+
+        if (!temp) return head; // Road not found
+        if (!prev){ head=temp->next;}// Removing the head
+        else{prev->next=temp->next;} // Skipping the current node
+        delete temp;
+        return head;
+    }
+
     void displayRoad(){
         for(int i=0;i<numOfVertex;i++) {
             cout<<char('A'+i)<<": ";
@@ -697,7 +724,8 @@ int main() {
         cout<<"5. Handle Emergency Vehicle Routing"<<endl;
         cout<<"6. Block Road due to Accident"<<endl;
         cout<<"7. Simulate Vehicle Routing"<<endl;
-        cout<<"8. Exit Simulation"<<endl;
+        cout<<"8. Remove Road from Road Network"<<endl;
+        cout<<"9. Exit Simulation"<<endl;
         cout<<"Enter your choice: ";
         cin>>choice;
         switch(choice){
@@ -737,7 +765,20 @@ int main() {
                break;
     case 7:
                break;
-    case 8:
+    case 8: {   // Remove Road from Network
+                cout << "\nEnter the source intersection (A-Z): ";
+                char src;
+                cin >> src;
+
+                cout << "Enter the destination intersection (A-Z): ";
+                char dest;
+                cin >> dest;
+
+                city.removeRoad(src, dest);
+                cout << "Road between " << src << " and " << dest << " removed successfully.\n";
+                break;
+            }
+    case 9:
                exit= true;
                break;
     default:
