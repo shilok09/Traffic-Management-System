@@ -493,6 +493,187 @@ void read_and_Build(roadNetworks &roads)
     }
     file.close();
 }
+class Signal{
+    public:
+     char intersection;
+     int greenTime;
+     int vehicleDensity;
+     bool emergencyVehicle;
+     Signal* next;
+     
+     Signal(char i='*', int g='*', int v=0, bool e=false){
+        intersection=i;
+        greenTime= g;
+        vehicleDensity=v;
+        emergencyVehicle= e;
+        next=NULL;
+     }
+    
+};
+//priority queue (array of object Signal) Maxheap
+class PriorityQueue{
+     public:
+     int capacity;
+     int size;
+     Signal* queue;
+     
+     PriorityQueue(){
+         size= 0;
+         capacity= 26;
+         queue= new Signal[capacity];
+     }
+     
+     ~PriorityQueue(){
+         delete[] queue;
+     }
+     
+      void swap(Signal& signal1 , Signal& signal2){
+             Signal temp=signal1;
+             signal1=signal2;
+             signal2= temp;
+             
+	     
+      }
+      
+      void heapify(int index){
+            int max=index;
+            int right= (2*index)+2;
+            int left=(2*index)+1;
+            if(right<size){
+		    if(queue[right].emergencyVehicle==true && queue[max].emergencyVehicle==false){
+		        max=right;
+                     }else if(queue[right].vehicleDensity> queue[max].vehicleDensity){
+                        max=right;
+                     }
+            }
+            if(left< size){
+		    if(queue[left].emergencyVehicle==true && queue[max].emergencyVehicle==false){
+		        max=left;
+		    }else if(queue[left].vehicleDensity> queue[max].vehicleDensity){
+		        max=left;
+		    }
+            }
+            if(max!=index){
+                swap(queue[index], queue[max]);
+                heapify(max);
+            }
+            
+      }
+      void add(Signal signal){
+         if(size<capacity){
+            queue[size]=signal;
+            int curr= size;
+            size++;
+            
+            while(curr!=0 && queue[curr].vehicleDensity> queue[(curr- 1)/2].vehicleDensity){
+            if(queue[curr].emergencyVehicle==false && queue[(curr- 1)/2].emergencyVehicle==true){
+                swap(queue[curr],queue[(curr- 1)/2]);
+                curr= (curr-1) /2;
+            }else if(queue[curr].emergencyVehicle==false && queue[(curr- 1)/2].emergencyVehicle==false && queue[curr].vehicleDensity> queue[(curr- 1)/2].vehicleDensity){
+               swap(queue[curr],queue[(curr- 1)/2]);
+               curr= (curr-1) /2;
+            }else{
+                break;
+            }
+            }
+         }
+      }
+      Signal del_getMax(){
+          if(size>0){
+             Signal max=queue[0];
+             queue[0]= queue[size-1];
+             size--;
+             
+             heapify(0);
+             return max;
+          }
+      }
+};
+//list storing all intersections with their green time
+class SignalList{
+    public:
+       Signal* head;
+       SignalList(){
+          head=NULL;
+       }
+       
+       void addSignal(char i,int g){
+          Signal* newsignal= new Signal(i,g);
+           if(head==NULL){
+              head=newsignal;
+           }else{
+             Signal* temp=head;
+               while(temp->next!=NULL){
+                   temp=temp->next;
+               }
+               temp->next=newsignal;
+           }
+       }
+       
+       void display(){
+             cout<<"-----Traffic Signal Status-----"<<endl;
+             Signal* temp=head;
+             while(temp!=NULL){
+                 cout<<"Intersection "<<temp->intersection<<" Green Time: "<<temp->greenTime<<"s"<<endl;
+                  temp=temp->next;
+             }
+         
+         }
+};
+
+class TrafficSignalManagement{
+     public:
+        SignalList signals;
+        PriorityQueue queue;
+        void loadData(){
+	    string line;
+	    string info;
+	   
+	    int greenTime;
+	    char intersection;
+	    int lines=0;
+	    
+	    
+	    ifstream myFile("traffic_signals.csv");
+	    
+	    while(getline(myFile, line)){
+		if(lines!=0 && !line.empty()){
+		
+		  stringstream ss(line);
+	          
+	          getline(ss, info, ',');
+	          intersection= info[0];
+	          
+	          getline(ss, info, ',');
+	          greenTime= stoi(info);
+	         
+	          signals.addSignal(intersection, greenTime);
+	          
+	          }
+	         
+	         lines++;
+	    
+	   
+	      }
+	    myFile.close();
+         } 
+         void addVehicleDensity(){
+              
+         }
+         void addEmergencyVehicle(){}
+         void addToHeap(){
+             Signal* temp= signals.head;
+             while(temp!=NULL){
+                queue.add(*temp);
+                temp=temp->next;
+             }
+         }
+         void CalculateGreenTime(){}
+         
+         void display(){
+             signals.display();
+         }
+};
 
 
 int main() {
