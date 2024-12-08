@@ -2,7 +2,9 @@
 #include<fstream>
 #include<string>
 #include<sstream>
+#include<chrono>
 using namespace std;
+using namespace chrono;
 
 struct road {
     char dest;       
@@ -17,12 +19,14 @@ class vehicle
     string path;
     string curr;
     string priority;
-    int l=1;
-    vehicle(string v="", string p="",string prior="Low")
-    {
+    bool reached;
+    int l;
+    vehicle(string v="", string p="",string prior="Low", bool r=false)
+    {   l=1;
         V=v;
         path=p;
         priority=prior;
+        reached=r;
         for(int i=0; i<2; i++)
         {
             if(p[i]!='\0')
@@ -33,18 +37,17 @@ class vehicle
         //cout<<"current: "<<curr<<endl;
        
     }
-    void change_Current()
-    {
-        curr="";
-       for(int i=l; i<2+l; i++)
-        {
-            if(path[i]!='\0')
-            {
-            curr+=path[i];
+    void change_Current() {
+        if (l < path.length()) {
+            curr = path.substr(l, 2); 
+            
+            l++;
+            
+           
+            if (l >= path.length()) {
+                reached = true;
             }
-        }
-        cout<<"current: "<<curr<<endl;
-        l++;
+        } 
     }
     string current_path()
     {
@@ -205,7 +208,6 @@ class RoadClosure{
          }
 
 };
-
 struct QueueNode 
 {
     int weight;
@@ -293,6 +295,33 @@ public:
             roadKiList[destIndex]=new road(src, dist, roadKiList[destIndex]);
         }
     }
+     /*   void removeRoad(char src,char dest){
+        int srcIndex=src-'A';
+        int destIndex=dest-'A';
+
+        // Remove road from src to dest
+        roadKiList[srcIndex]=removeRoadFromList(roadKiList[srcIndex],dest);
+
+        // Remove road from dest to src (if two-way)
+        roadKiList[destIndex]=removeRoadFromList(roadKiList[destIndex],src);
+    }
+
+    road* removeRoadFromList(road* head, char dest) {
+        road* temp = head;
+        road* prev = nullptr;
+
+        while (temp &&temp->dest != dest) {
+            prev = temp;
+            temp = temp->next;
+        }
+
+        if (!temp) return head; // Road not found
+        if (!prev){ head=temp->next;}// Removing the head
+        else{prev->next=temp->next;} // Skipping the current node
+        delete temp;
+        return head;
+    }
+    */
     void displayRoad(){
         for(int i=0;i<numOfVertex;i++) {
             cout<<char('A'+i)<<": ";
@@ -304,7 +333,7 @@ public:
             cout<<endl;
         }
     }
- void dfs(int cNode,int eNode, string currentPath,bool*v,int W) 
+    void dfs(int cNode,int eNode, string currentPath,bool*v,int W) 
  {
     if (cNode==eNode)
     {
@@ -384,8 +413,8 @@ void findAllPaths()
 
 		road* temp = roadKiList[u];
 		while (temp != NULL) {
-		    char a = 'A'+u;  // Source node
-		    char b = temp->dest; 
+		    char a = 'A' + u;  // Source node
+		    char b = temp->dest; // Destination node
 		    // Check if road is blocked or under repair before considering it
 		    if(!isBlocked(a, b)) {
 		        int l=temp->dest - 'A';
@@ -411,7 +440,7 @@ void findAllPaths()
 		cout << "No path was found." << endl;
 		return "";
 	    } else {
-		//cout << "Shortest distance: " << dist[e] << endl;
+		cout << "Shortest distance: " << dist[e] << endl;
 		char a = end;
 		int i;
 		string V;
@@ -596,16 +625,20 @@ class Signal{
      int greenTime;
      int vehicleDensity;
      bool emergencyVehicle;
-     bool highPriority;
+     vehicle* emergency;
+     int Evehicledensity; 
      Signal* next;
+     string color;
      
-     Signal(char i='*', int g='*', int v=0, bool e=false, bool h=false){
+     Signal(char i='*', int g='*', int v=0, bool e=false, int s=0){
         intersection=i;
         greenTime= g;
         vehicleDensity=v;
         emergencyVehicle= e;
-        highPriority= h;
+        Evehicledensity=s;
+        emergency= new vehicle[18];
         next=NULL;
+        color="red";
      }
     
 };
@@ -640,20 +673,27 @@ PriorityQueue()
             int max=index;
             int right= (2*index)+2;
             int left=(2*index)+1;
-            if(right<size){
+                 if(right<size){
 		    if(queue[right].emergencyVehicle==true && queue[max].emergencyVehicle==false){
-		        max=right;
-                     }else if(queue[right].vehicleDensity> queue[max].vehicleDensity){
-                        max=right;
-                     }
-            }
-            if(left< size){
+                   max=right;
+               }else if(queue[right].emergencyVehicle==true && queue[max].emergencyVehicle==false && queue[right].Evehicledensity>queue[max].Evehicledensity ){
+                   max=right;
+               }else if(queue[right].emergencyVehicle==true && queue[max].emergencyVehicle==false && queue[right].Evehicledensity==queue[max].Evehicledensity && queue[right].vehicleDensity> queue[max].vehicleDensity){
+                   max=right;
+               }
+            
+                    }
+                 if(left< size){
 		    if(queue[left].emergencyVehicle==true && queue[max].emergencyVehicle==false){
-		        max=left;
-		    }else if(queue[left].vehicleDensity> queue[max].vehicleDensity){
-		        max=left;
+                   max=right;
+               }else if(queue[left].emergencyVehicle==true && queue[max].emergencyVehicle==false && queue[left].Evehicledensity>queue[max].Evehicledensity ){
+                   max=right;
+               }else if(queue[left].emergencyVehicle==true && queue[max].emergencyVehicle==false && queue[left].Evehicledensity==queue[max].Evehicledensity && queue[left].vehicleDensity> queue[max].vehicleDensity){
+                   max=right;
+               }
+            
 		    }
-            }
+            
             if(max!=index){
                 swap(queue[index], queue[max]);
                 heapify(max);
@@ -663,22 +703,30 @@ PriorityQueue()
       void add(Signal signal)
       {
          if(size<capacity){
+         
             queue[size]=signal;
             int curr= size;
             size++;
             
-            while(curr!=0 && queue[curr].vehicleDensity> queue[(curr- 1)/2].vehicleDensity){
-            if(queue[curr].emergencyVehicle==false && queue[(curr- 1)/2].emergencyVehicle==true){
-                swap(queue[curr],queue[(curr- 1)/2]);
-                curr= (curr-1) /2;
-            }else if(queue[curr].emergencyVehicle==false && queue[(curr- 1)/2].emergencyVehicle==false && queue[curr].vehicleDensity> queue[(curr- 1)/2].vehicleDensity){
-               swap(queue[curr],queue[(curr- 1)/2]);
-               curr= (curr-1) /2;
-            }else{
-                break;
-            }
-            }
+            while(curr!=0 ){
+               if(queue[curr].emergencyVehicle==true && queue[(curr- 1)/2].emergencyVehicle==false){
+                   swap(queue[curr],queue[(curr- 1)/2]);
+                   curr= (curr-1) /2;
+               }else if(queue[curr].emergencyVehicle==true && queue[(curr- 1)/2].emergencyVehicle==false && queue[curr].Evehicledensity>queue[(curr- 1)/2].Evehicledensity ){
+                   swap(queue[curr],queue[(curr- 1)/2]);
+                   curr= (curr-1) /2;
+               }else if(queue[curr].emergencyVehicle==true && queue[(curr- 1)/2].emergencyVehicle==false && queue[curr].Evehicledensity==queue[(curr- 1)/2].Evehicledensity && queue[curr].vehicleDensity> queue[(curr- 1)/2].vehicleDensity){
+                   swap(queue[curr],queue[(curr- 1)/2]);
+                   curr= (curr-1) /2;
+               }else{
+                  break;
+               }
+            
+            
+            
+            
          }
+      }
       }
       Signal del_getMax()
       {
@@ -688,8 +736,15 @@ PriorityQueue()
              size--;
              
              heapify(0);
+             max.color="green";
              return max;
           }
+      }
+      void display(){
+          cout << "---- Priority Queue for Traffic Signals ----" << endl;
+         for(int i=0; i<size; i++){
+             cout<<"Intersection "<<queue[i].intersection<<" Green Time: "<<queue[i].greenTime<<"s"<<endl;
+         }
       }
 };
 //list storing all intersections with their green time
@@ -700,8 +755,7 @@ class SignalList{
           head=NULL;
        }
        
-       void addSignal(char i,int g)
-       {
+       void addSignal(char i,int g){
           Signal* newsignal= new Signal(i,g);
            if(head==NULL){
               head=newsignal;
@@ -728,6 +782,7 @@ class TrafficSignalManagement{
      public:
         SignalList signals;
         PriorityQueue queue;
+        
         void loadData(){
 	    string line;
 	    string info;
@@ -760,28 +815,37 @@ class TrafficSignalManagement{
 	      }
 	    myFile.close();
          } 
-         void addVehicleDensity(){
-              
+        
+         void addVehicleDensity(vehicle* vehicles, int size){
+           Signal* temp= signals.head;
+            while(temp!=NULL){
+                for(int i=0; i<size; i++){
+                    char intersection=vehicles[i].curr[1];
+                    if(intersection==temp->intersection){
+                       temp->vehicleDensity++;
+                       break;
+                    }
+                }
+                temp=temp->next;
+             }
+               
          }
          void addEmergencyVehicle(vehicle* vehicles, int size){
-                Signal* temp=signals.head;
-                while(temp!=NULL){
-                  for(int i=0; i<size; i++){
-                   if(vehicles[i].V[0]=='E'){
-                    string path=vehicles[i].path;
-                    for(int j=0; j<path.length(); j++){
-                        if(path[j]==temp->intersection){
-                           temp->emergencyVehicle= true;
-                           if(vehicles[i].priority=="High")
-                            {temp->highPriority=true;}
-                            break;
-                        }
-                    }
-                    }
-                   }
-                   temp= temp->next;
+            Signal* temp= signals.head;
+            while(temp!=NULL){
+                for(int i=0; i<size; i++){
+                    char intersection=vehicles[i].curr[1];
+                    
+                    if(vehicles[i].V[0]=='E' && intersection==temp->intersection){
+                       temp->emergencyVehicle=true;
+                       temp->emergency[temp->Evehicledensity]=vehicles[i];
+                       temp->Evehicledensity++;
+                       }
                 }
+                temp=temp->next;
+             }
          }
+         
          void addToHeap(){
              Signal* temp= signals.head;
              while(temp!=NULL){
@@ -789,13 +853,47 @@ class TrafficSignalManagement{
                 temp=temp->next;
              }
          }
-         void CalculateGreenTime(){}
+         void CalculateGreenTime(){
+            Signal* temp= signals.head;
+            while(temp!=NULL){
+               temp->greenTime= 10+2*(temp->vehicleDensity);
+                temp=temp->next;
+            } 
+         }
          
          void display(){
+             
              signals.display();
+             //queue.display();
          }
+         
+
+	void changeVehicleRoad(vehicle* vehicles, int size,roadNetworks city){
+	   Signal*temp= signals.head;
+	   while(temp!=NULL){
+	       if(temp->color=="green"){
+	          for(int i=0; i<size; i++){
+	              if(vehicles[i].curr[1]==temp->intersection){
+	                 city.changeCurrent(i);
+	              }
+	          }
+	       }
+	       temp=temp->next;
+	   }
+	}
+	void pathComplete(vehicle* vehicles, int size){
+	    for(int i=0; i<size; i++){
+	       if(vehicles[i].reached==true){
+	          cout<<"Vehicle "<<vehicles[i].V<<" Path Complete"<<endl;
+	       }
+	    }
+	}
+	
+
+
 };
 int main() {
+  Signal top;
   int totalVertexs = 26; 
   bool exit=false;
   RoadClosure closure;
@@ -807,6 +905,28 @@ int main() {
   closure.loadData();
   TrafficSignalManagement traffic;
   traffic.loadData();
+  cout<<"Adding emergency vehicles:" <<endl;
+  city.readEmergencyVehicles(); 
+   cout<<"All Vehicles and Paths:" <<endl;
+            for(int i = 0; i < city.T_vehicle; i++) 
+            {
+             if (!city.v[i].V.empty()) {
+                 cout << "Vehicle: " << city.v[i].V 
+                 << ", Path: " << city.v[i].path 
+                 << ", Priority: " << city.v[i].priority << endl;
+                                       }
+            }
+          
+          traffic.addEmergencyVehicle(city.v, city.T_vehicle);
+          
+	  traffic.addVehicleDensity(city.v, city.T_vehicle);
+	
+	  traffic.addToHeap();
+	  
+	  //traffic.CalculateGreenTime();
+	  
+	 
+  
   while(!exit)
   {
     int choice;
@@ -828,6 +948,7 @@ int main() {
     case 2: 
            
                traffic.display();
+                traffic.CalculateGreenTime();
                break;
     case 3:
             cout<<"Assigning shortest path to vehicles:"<<endl;
@@ -837,17 +958,6 @@ int main() {
             closure.display();
              break;
     case 5:
-            cout<<"Adding emergency vehicles:" <<endl;
-            city.readEmergencyVehicles(); 
-            cout<<"All Vehicles and Paths:" <<endl;
-            for(int i = 0; i < city.T_vehicle; i++) 
-            {
-             if (!city.v[i].V.empty()) {
-                 cout << "Vehicle: " << city.v[i].V 
-                 << ", Path: " << city.v[i].path 
-                 << ", Priority: " << city.v[i].priority << endl;
-                                       }
-            }
             city.handleEmergencyVehicle();
                break;
     case 6:
@@ -856,7 +966,7 @@ int main() {
               city.handleEmergencyVehicle();
                break;
     case 7:
-             city.findAllPaths();
+               traffic.pathComplete(city.v, city.T_vehicle);
                break;
     case 8:
                exit= true;
@@ -865,6 +975,7 @@ int main() {
                cout<<"Invalid Choice!"<<endl;
                break;
         }
+          
 }
     return 0;
 
