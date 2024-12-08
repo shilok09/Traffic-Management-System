@@ -326,6 +326,110 @@ void read_and_Build(roadNetworks &roads)
     }
     file.close();
 }
+class Status{
+     public:
+     char start;
+     char end;
+     string status;
+     Status* next;
+     Status(char s, char e, string stat){
+        start= s;
+        end= e;
+        status= stat;
+        next=NULL;
+     }
+
+};
+class RoadStatusList{
+    public:
+       Status* head;
+       RoadStatusList(){
+          head=NULL;
+       }
+       void addStatus(char s, char e, string stat){
+          Status* newstatus= new Status(s, e, stat);
+           if(head==NULL){
+              head=newstatus;
+           }else{
+             Status* temp=head;
+               while(temp->next!=NULL){
+                   temp=temp->next;
+               }
+               temp->next=newstatus;
+           }
+       }
+       void display(){
+             cout<<"-----Blocked Roads-----"<<endl;
+             Status* temp=head;
+             while(temp!=NULL){
+                if(temp->status=="Blocked")
+                 cout<<temp->start<<" to "<<temp->end<<" is "<<temp->status<<"."<<endl;
+                  temp=temp->next;
+             }
+         
+         }
+};
+class RoadClosure{
+      public:
+      RoadStatusList statuses;
+      void loadData(){
+	    string line;
+	    string info;
+	   
+	    string status;
+	    char start;
+	    char end;
+	    int lines=0;
+	    
+	    
+	    ifstream myFile("road_closures.csv");
+	    
+	    while(getline(myFile, line)){
+	    
+		if(lines!=0 && !line.empty() ){
+		
+		  stringstream ss(line);
+	          getline(ss, info, ',');
+	          start= info[0];
+	          if (info==""){
+	             continue;
+	          }
+	          getline(ss, info, ',');
+	          end= info[0];
+	          
+	          getline(ss, info, ',');
+	          status= info;
+	         
+	          statuses.addStatus(start, end, status);
+	          
+	          }
+	         
+	         lines++;
+	    
+	   
+	      }
+	    myFile.close();
+         } 
+         void blockRoad(){
+              string road;
+              cout<<"Enter road to block(start, end): ";
+              cin>>road;
+              if(road.length()!=2){
+                  cout<<"Invalid Input!"<<endl;
+              }else{
+                 char start=toupper(road[0]);
+                 char end=toupper(road[1]);
+                 statuses.addStatus(start, end, "Blocked");
+                 display();
+                 //vehicle routing system
+              }
+            }
+         void display(){
+             statuses.display();
+         }
+
+};
+
 
 int main() {
     int totalVertexs = 26; 
